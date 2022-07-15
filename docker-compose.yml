@@ -6,13 +6,12 @@ services:
         - "3306:3306"
       volumes:
         # - ./db/mysql_init:/my.cnf:/etc/mysql/conf.d/my.cnf
-        - ./db/mysql_init:/docker-entrypoint-initdb.d:rw
-        - ./db/mysql_data:/var/db/mysql:rw
+        # - ./db/mysql_init:/docker-entrypoint-initdb.d:rw
       user: mysql
       privileged: true
       environment:
         MYSQL_ROOT_PASSWORD: root
-        MYSQL_DATABASE: test_db
+        MYSQL_DATABASE: test
         MYSQL_USER: bootcamp
         MYSQL_PASSWORD: bootcamp
       command: mysqld --character-set-server=utf8mb4
