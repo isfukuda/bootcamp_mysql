@@ -179,11 +179,22 @@ $ git clone https://github.com/isfukuda/bootcamp_mysql.git
 - Insert json data
 - Query data
 
-## 8. Next Action
+## 5.まとめ
+MySQLに触れてみて
+- MySQLサーバ環境準備
+  docker/docker-composeを使いMySQLサーバ構築を簡略化させてもらいました。MySQL on dockerについては考慮すべきことが多々あります
+  この点は頭の片隅に必ず置いて覚えておいて下さい
+- 基本的なDatabase操作を経験
+  データベースへのアクセスにはmysqlクライアントを使い、基本的な知識抜きに「実践形式」でデータベースオブジェクトを作成、Queryを実行しました
+  なお、アプリケーション技術者を目指す方は別途、開発言語/Database Driver経由でデータベースの操作を行う事をお勧めします
+- 本日触れなかった事
+  - MySQLサーバ初期構築から、rootログインとその後のDatabaseユーザ管理はしっかりと設計と実装が別途必須です
+  - MySQLサーバ設定については一切触れていません、ご了承ください
+  - 今回の講義ではINDEXを作成したのみです、有効なINDEXであるかは (Q. INDEX貼ればQueryって早くなるのか？)
+　    利用するデータ、Query、条件などによって変わります。とても深い内容につき割愛しています
+  - データベース要件に合わせた論理設計、物理設計、運用設計等々全般
 
-このハンズオンが終わったら自分のメンターに相談して、所属部署のリポジトリにPull Requestをしてみましょう。
-
-## 9. 参考資料
+## 参考資料
 
 - [MySQL 8.0 リファレンスマニュアル](https://dev.mysql.com/doc/refman/8.0/ja/)
 - [MySQLパフォーマンスチューニング概要](https://www.oracle.com/technetwork/jp/ondemand/database/mysql/mysql-perftun-1484759-ja.pdf)
