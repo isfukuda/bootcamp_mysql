@@ -166,10 +166,17 @@ $ cd bootcamp_mysql
 ```
 $ git clone https://github.com/isfukuda/bootcamp_mysql.git
 ```
-
-## 3. varchar or int ?
+## 3. ハンズオン「IPアドレスを収容する最適なデータ型はvarcharか、intか」 
+- ハンズオン実施に際して前提となる条件のまとめ
+  - MySQL8 Docker imageを利用する
+  - MySQLはデフォルト設定とする
+  - サンプルデータ(アクセスログ 100,000件)を事前に用意、これを定義の異なる2つのTableへデータ投入する
+    - 上記ログにはIPアドレスが含まれる。一方のTableはIPアドレスを varchar型とする
+    - もう一方のTableはIPアドレスを int型とする
+  - ぞれぞれのTableに対し「重複するIPアドレスを抽出する」同一のクエリを実行する
 ### 3.1 varchar型
-- Create table char
+- IPアドレスを varchar型と定義したTableを作成、サンプルデータをLoadする
+  - Q.Tableにデータを追加する命令は？
 ```
 // file copy to Container
 # ls 
@@ -200,7 +207,7 @@ Enter password:
 +-----------------+
 
 ```
-- Smaple_100k , load to char
+- Smaple_100k , load to varchar
 ```
 # docker exec -it mysql8 mysql -u bootcamp -p --local_infile=1 nginx -e"$(cat load_data_iplist.sql);"
 Enter password: 
@@ -214,7 +221,8 @@ Enter password:
 +----------+
 ```
 ### 3.2 int型
-- table作成, int型
+- IPアドレスをint型で定義したTableを別に作成する
+- varchar型の時はLoadコマンドを使いましたが、今回はINSERT文を実行します
 ```
 # docker exec -it mysql8 mysql -u bootcamp -p nginx -e"$(cat create_table_iplist_int.sql);"
 Enter password: 
@@ -241,9 +249,9 @@ Enter password:
 |   100000 |
 +----------+
 ```
-### 3.3 varchar vs int
-- それぞれのTableへ重複行を調べるQueryを投げてみる
-- 事前にロードしたデータに意図して重複データを忍ばせておいた
+### 3.3 型の異なるTableへSELECTを実行する
+- それぞれのTableへ重複行を調べるQueryを投げてその違い/結果を見ます
+- 今回のサンプルデータには意図して重複データを忍ばせてあります
 ```
 # docker exec -it mysql8 bash
 bash-4.4# mysql -h localhost -uroot -p
@@ -275,7 +283,7 @@ mysql> show tables
 | ip_addr_int     |
 +-----------------+
 
-// まずはvarchar
+// まずはvarchar型のTable
 mysql> select host,count(host) from ip_addr_char GROUP BY host HAVING COUNT(host) > 1;
 +----------------+-------------+
 | host           | count(host) |
@@ -284,7 +292,7 @@ mysql> select host,count(host) from ip_addr_char GROUP BY host HAVING COUNT(host
 +----------------+-------------+
 1 row in set (0.66 sec)
 
-// 次にint
+// 次にint型のTable
 mysql> select host,count(host) from ip_addr_int GROUP BY host HAVING COUNT(host) > 1;
 +------------+-------------+
 | host       | count(host) |
@@ -293,6 +301,7 @@ mysql> select host,count(host) from ip_addr_int GROUP BY host HAVING COUNT(host)
 +------------+-------------+
 1 row in set (0.18 sec)
 ```
+
 ### 3.4 Query実行結果について調査
 - profileingを行い、その内容から推定原因を探る
 ```
@@ -367,12 +376,26 @@ mysql> SHOW PROFILE;
 +--------------------------------+----------+
 18 rows in set, 1 warning (0.00 sec)
 ```
-## 4. JSON型 
-- Create table
-- Insert json data
-- Query data
-
-## 5.まとめ
+## 4. ハンズオン[3]の結果から得る考察及び対応策/対応方針を考えましょう
+- 参加された方々のそれぞれの立場で最適なアクションはどれでしょうか？
+### 4.1 アプリケーション開発者として
+- 選択肢
+  - a.　Query実装要件からIPアドレスはint型で良いと判断できるので、採用する
+  - b.　想定したデータ量及び、SELECT文に見合ったリソースでは無い事を調査、再見積もりを行いDBAと対応策を検討、実装する
+  - c.　一時Tableを消費してしまうGROUP BY句では無いSQLに書き換えて限られたリソース内でクエリパフォーマンスを上げる
+  - d.　MySQLのパフォーマンスが根本問題なので、今すぐ直せと指示を出す
+  - e.　その他
+ 
+### 4.2 DBA（DATABASE管理者）として
+- 選択肢
+  - a.　闇雲にSELECT文を発行してリソースを食い潰すアプリケーション開発者側へ改修依頼だけを行う
+  - b.　heap to diskの原因をアプリケーション開発チームと共有し、SQL改修の検討を含め共同で改修に着手する
+  - c.　Heap領域の最適解を実行結果から再見積もり、検証、実証してから新MySQLインスタンスをアプリケーションチームへ提供する
+  - d.　MySQLの利用を止めて、その他のRDBMSエンジンを採用する様にProjectマネージャーに進言する
+  - e.　MySQLをForkして、ip型をスクラッチで実装する
+  - d.　その他
+  
+## 5. 本日のまとめ
 MySQLに触れてみて
 - MySQLサーバ環境準備
   docker/docker-composeを使いMySQLサーバ構築を簡略化させてもらいました。MySQL on dockerについては考慮すべきことが多々あります
@@ -381,11 +404,11 @@ MySQLに触れてみて
   データベースへのアクセスにはmysqlクライアントを使い、基本的な知識抜きに「実践形式」でデータベースオブジェクトを作成、Queryを実行しました
   なお、アプリケーション技術者を目指す方は別途、開発言語/Database Driver経由でデータベースの操作を行う事をお勧めします
 - 本日触れなかった事
+　　　　- データベース要件に合わせた論理設計、物理設計、運用設計等々全
   - MySQLサーバ初期構築から、rootログインとその後のDatabaseユーザ管理はしっかりと設計と実装が別途必須です
   - MySQLサーバ設定については一切触れていません、ご了承ください
-  - 今回の講義ではINDEXを作成したのみです、有効なINDEXであるかは (Q. INDEX貼ればQueryって早くなるのか？)
-　    利用するデータ、Query、条件などによって変わります。とても深い内容につき割愛しています
-  - データベース要件に合わせた論理設計、物理設計、運用設計等々全般
+  - 今回の講義ではINDEXあ有効な手段であるかは触れていません。
+　　　　　　　　利用するデータ、Query、条件などによって変わります。とても深い内容につき割愛しています
 
 ## 参考資料
 
