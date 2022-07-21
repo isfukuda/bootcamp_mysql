@@ -299,7 +299,7 @@ mysql> select host,count(host) from ip_addr_int GROUP BY host HAVING COUNT(host)
 // おまじない
 mysql> SET profiling=1;
 mysql> select host,count(host) from ip_addr_char GROUP BY host HAVING COUNT(host) > 1;
-^[[A+----------------+-------------+
++----------------+-------------+
 | host           | count(host) |
 +----------------+-------------+
 | 196.161.227.49 |           2 |
