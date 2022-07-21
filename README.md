@@ -41,7 +41,8 @@ docker.io/mysql               latest              33037edcac9b        2 days ago
 - MySQL起動、ログイン、パスワード設定
 - Database / Table / Insert … 各種作成
 - 各種Query操作
-- 応用編 (やれる方/自由課題)
+- QueryからみえるMySQLの動き
+- アプリケーション開発者あるいはDBA等、様々な角度から対応策を検討する
 
 ## 1.雑談、フリーディスカッション 15min程度
 本日参加した皆さんの状況を教えてください
@@ -79,8 +80,8 @@ docker.io/mysql               latest              33037edcac9b        2 days ago
 
   ”関係モデル”を構築するのに適切な「データ保管庫」が ______
   
-## 2.MySQL 環境整備
-
+## 2.MySQL 環境構築
+- MySQL公式Dockerイメージ最新版を使います
 ### MySQL 起動、ログイン、ユーザ作成
 - MySQL起動まで CP#1
 ```
@@ -166,21 +167,30 @@ $ cd bootcamp_mysql
 ```
 $ git clone https://github.com/isfukuda/bootcamp_mysql.git
 ```
-## 3. ハンズオン「IPアドレスを収容する最適なデータ型はvarcharか、intか」 
-- ハンズオン実施に際して前提となる条件のまとめ
+## 3. ハンズオン
+- RDBMSへの要件
+  1. 10万件のアクセスログを保存するDatabaseを作成しデータを格納したい
+  2. 該当のTableに対して、IPアドレスが重複しているものを抽出したい(IP, 件数)
+  　　- Queryは事前に作成済み、コピーして実行します
+
+- 課題
+　「IPアドレス」を格納する列のデータ型はvarcharか、intどちらが良いか？
+
+- ハンズオンに際して以下の条件で実行します
   - MySQL8 Docker imageを利用する
-  - MySQLはデフォルト設定とする
-  - サンプルデータ(アクセスログ 100,000件)を事前に用意、これを定義の異なる2つのTableへデータ投入する
-    - 上記ログにはIPアドレスが含まれる。一方のTableはIPアドレスを varchar型とする
-    - もう一方のTableはIPアドレスを int型とする
-  - ぞれぞれのTableに対し「重複するIPアドレスを抽出する」同一のクエリを実行する
-### 3.1 varchar型
+  - MySQLはデフォルト設定で実行する
+  - サンプルデータ(アクセスログ 100,000件)を事前に用意してあり、定義の異なる2つのTableへそれぞれデータ投入する
+    - 上記ログにはIPアドレスが含まれており、一方のTableはIPアドレスをvarchar型とする
+    - もう一方のTableはIPアドレスをint型とする
+
+### 3.1 varchar型のTableの準備とデータ投入
 - IPアドレスを varchar型と定義したTableを作成、サンプルデータをLoadする
-  - Q.Tableにデータを追加する命令は？
+  - Q.3.1ではLoadコマンドを使いますが、標準的なSQLでTableにデータを追加するにはなんという命令文を使いますか？
 ```
 // file copy to Container
 # ls 
-crate_table_kimetsu.sql  create_table_iplist_char.sql  create_table_iplist_int.sql  create_table_sushi.sql  insert_kimetsu.sql  insert_sushi.sql  load_data_iplist.sql  sample_100k.tsv
+crate_table_kimetsu.sql  create_table_iplist_char.sql  create_table_iplist_int.sql  create_table_sushi.sql 
+insert_kimetsu.sql  insert_sushi.sql  load_data_iplist.sql  sample_100k.tsv
 
 # docker cp sample_100k.tsv mysql8:/tmp
 
@@ -206,6 +216,18 @@ Enter password:
 | ip_addr_char    |
 +-----------------+
 
+
+#  docker exec -it mysql8 mysql -u bootcamp -p nginx -e"desc ip_addr_char;"
+Enter password: 
++--------+-------------+------+-----+---------+-------+
+| Field  | Type        | Null | Key | Default | Extra |
++--------+-------------+------+-----+---------+-------+
+| host   | varchar(32) | NO   |     | NULL    |       |
+| time   | datetime    | YES  |     | NULL    |       |
+| method | varchar(12) | YES  |     | NULL    |       |
+| code   | int         | YES  |     | NULL    |       |
+| size   | int         | YES  |     | NULL    |       |
++--------+-------------+------+-----+---------+-------+
 ```
 - Smaple_100k , load to varchar
 ```
@@ -234,7 +256,20 @@ Enter password:
 +-----------------+
 | ip_addr_char    |
 | ip_addr_int     |
-+----------+
++-----------------+
+
+#  docker exec -it mysql8 mysql -u bootcamp -p nginx -e"desc ip_addr_int;"
+Enter password: 
++--------+-------------+------+-----+---------+-------+
+| Field  | Type        | Null | Key | Default | Extra |
++--------+-------------+------+-----+---------+-------+
+| host   | bigint      | NO   |     | NULL    |       |
+| time   | datetime    | YES  |     | NULL    |       |
+| method | varchar(12) | YES  |     | NULL    |       |
+| code   | int         | YES  |     | NULL    |       |
+| size   | int         | YES  |     | NULL    |       |
++--------+-------------+------+-----+---------+-------+
+
 ```
 - Insert data to int table from char table
 ```
@@ -249,8 +284,9 @@ Enter password:
 |   100000 |
 +----------+
 ```
-### 3.3 型の異なるTableへSELECTを実行する
-- それぞれのTableへ重複行を調べるQueryを投げてその違い/結果を見ます
+### 3.3 重複した行を抽出するQueryを実行する
+- それぞれのTableへQueryを投げ、その違い/結果を見ます
+  - 特にQuery実行結果に出力されるクエリレスポンスに注目する事
 - 今回のサンプルデータには意図して重複データを忍ばせてあります
 ```
 # docker exec -it mysql8 bash
@@ -376,6 +412,9 @@ mysql> SHOW PROFILE;
 +--------------------------------+----------+
 18 rows in set, 1 warning (0.00 sec)
 ```
+### 3.5 Profileing結果を整理
+- 図解
+
 ## 4. ハンズオン3の結果から対応策/対応方針を考えましょう
 - 参加された方々のそれぞれの立場で最適なアクションはどれでしょうか？
 ### 4.1 アプリケーション開発者として
