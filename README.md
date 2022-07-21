@@ -292,9 +292,9 @@ mysql> select host,count(host) from ip_addr_int GROUP BY host HAVING COUNT(host)
 | 3298943793 |           2 |
 +------------+-------------+
 1 row in set (0.18 sec)
-
-### 3.4 Queryの差が出た理由を調べる
-- profileingを行い、結果から何が原因だったかを考察してみてください
+```
+### 3.4 Query実行結果について調査
+- profileingを行い、その内容から推定原因を探る
 ```
 // おまじない
 mysql> SET profiling=1;
@@ -366,7 +366,6 @@ mysql> SHOW PROFILE;
 | cleaning up                    | 0.000014 |
 +--------------------------------+----------+
 18 rows in set, 1 warning (0.00 sec)
-
 ```
 ## 4. JSON型 
 - Create table
