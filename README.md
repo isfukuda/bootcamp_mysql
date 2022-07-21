@@ -156,10 +156,10 @@ Enter password:
 - Proxy設定を確認の上、下記のURLへアクセス
 ```
 $ env |grep proxy
-http_proxy=http://<PROXY HOST>:8080/
-https_proxy=http://<PROXY HOST>:8080/
+http_proxy=http://proxy.iiji.jp:8080/
+https_proxy=http://proxy.iiji.jp:8080/
 
-$ git clone https://<社内REPO>/<XXXXXX>/bootcamp_mysql.git
+$ git clone https://gh.iiji.jp/s-fukuda/bootcamp_mysql.git
 $ cd bootcamp_mysql
 ```
 - Group 会社の方は、下記のURLへアクセス
@@ -167,13 +167,207 @@ $ cd bootcamp_mysql
 $ git clone https://github.com/isfukuda/bootcamp_mysql.git
 ```
 
-## 3. Char vs Int
+## 3. varchar or int ?
+### 3.1 varchar型
 - Create table char
-- Smaple_100k , load to char
-- Create table int
-- Insert data to int table from char table
-- Query Performance
+```
+// file copy to Container
+# ls 
+crate_table_kimetsu.sql  create_table_iplist_char.sql  create_table_iplist_int.sql  create_table_sushi.sql  insert_kimetsu.sql  insert_sushi.sql  load_data_iplist.sql  sample_100k.tsv
 
+# docker cp sample_100k.tsv mysql8:/tmp
+
+//  load file用おまじまい //
+# docker exec -it mysql8 mysql -u bootcamp -p nginx -e"SET PERSIST local_infile= 1;"
+Enter password: 
+# docker exec -it mysql8 mysql -u bootcamp -p nginx -e"SELECT @@local_infile;"
+Enter password: 
++----------------+
+| @@local_infile |
++----------------+
+|              1 |
++----------------+
+
+# docker exec -it mysql8 mysql -u bootcamp -p nginx -e"$(cat create_table_iplist_char.sql);"
+Enter password: 
+
+# docker exec -it mysql8 mysql -u bootcamp -p nginx -e"show tables;"
+Enter password: 
++-----------------+
+| Tables_in_nginx |
++-----------------+
+| ip_addr_char    |
++-----------------+
+
+```
+- Smaple_100k , load to char
+```
+# docker exec -it mysql8 mysql -u bootcamp -p --local_infile=1 nginx -e"$(cat load_data_iplist.sql);"
+Enter password: 
+
+# docker exec -it mysql8 mysql -u bootcamp -p nginx -e"select count(*) from ip_addr_char;"
+Enter password: 
++----------+
+| count(*) |
++----------+
+|   100000 |
++----------+
+```
+### 3.2 int型
+- table作成, int型
+```
+# docker exec -it mysql8 mysql -u bootcamp -p nginx -e"$(cat create_table_iplist_int.sql);"
+Enter password: 
+
+#  docker exec -it mysql8 mysql -u bootcamp -p nginx -e"show tables;"
+Enter password: 
++-----------------+
+| Tables_in_nginx |
++-----------------+
+| ip_addr_char    |
+| ip_addr_int     |
++----------+
+```
+- Insert data to int table from char table
+```
+# docker exec -it mysql8 mysql -u bootcamp -p --local_infile=1 nginx -e"$(cat insert_iplist_int.sql);"
+Enter password: 
+
+# docker exec -it mysql8 mysql -u bootcamp -p nginx -e"select count(*) from ip_addr_int;"
+Enter password: 
++----------+
+| count(*) |
++----------+
+|   100000 |
++----------+
+```
+### 3.3 varchar vs int
+- それぞれのTableへ重複行を調べるQueryを投げてみる
+- 事前にロードしたデータに意図して重複データを忍ばせておいた
+```
+# docker exec -it mysql8 bash
+bash-4.4# mysql -h localhost -uroot -p
+Enter password: 
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 13
+Server version: 8.0.29 MySQL Community Server - GPL
+
+Copyright (c) 2000, 2022, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql>
+mysql> use nginx
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+mysql> show tables
+    -> ;
++-----------------+
+| Tables_in_nginx |
++-----------------+
+| ip_addr_char    |
+| ip_addr_int     |
++-----------------+
+
+// まずはvarchar
+mysql> select host,count(host) from ip_addr_char GROUP BY host HAVING COUNT(host) > 1;
++----------------+-------------+
+| host           | count(host) |
++----------------+-------------+
+| 196.161.227.49 |           2 |
++----------------+-------------+
+1 row in set (0.66 sec)
+
+// 次にint
+mysql> select host,count(host) from ip_addr_int GROUP BY host HAVING COUNT(host) > 1;
++------------+-------------+
+| host       | count(host) |
++------------+-------------+
+| 3298943793 |           2 |
++------------+-------------+
+1 row in set (0.18 sec)
+
+### 3.4 Queryの差が出た理由を調べる
+- profileingを行い、結果から何が原因だったかを考察してみてください
+```
+// おまじない
+mysql> SET profiling=1;
+mysql> select host,count(host) from ip_addr_char GROUP BY host HAVING COUNT(host) > 1;
+^[[A+----------------+-------------+
+| host           | count(host) |
++----------------+-------------+
+| 196.161.227.49 |           2 |
++----------------+-------------+
+1 row in set (0.59 sec)
+
+mysql> SHOW PROFILE;
++--------------------------------+----------+
+| Status                         | Duration |
++--------------------------------+----------+
+| starting                       | 0.000108 |
+| Executing hook on transaction  | 0.000026 |
+| starting                       | 0.000011 |
+| checking permissions           | 0.000013 |
+| Opening tables                 | 0.000059 |
+| init                           | 0.000008 |
+| System lock                    | 0.000012 |
+| optimizing                     | 0.000013 |
+| statistics                     | 0.000020 |
+| preparing                      | 0.000018 |
+| Creating tmp table             | 0.000054 |
+| executing                      | 0.123630 |
+| converting HEAP to ondisk      | 0.309585 |
+| executing                      | 0.156658 |
+| end                            | 0.000024 |
+| query end                      | 0.000020 |
+| waiting for handler commit     | 0.000393 |
+| closing tables                 | 0.000015 |
+| freeing items                  | 0.000031 |
+| cleaning up                    | 0.000012 |
++--------------------------------+----------+
+20 rows in set, 1 warning (0.00 sec)
+
+// int型
+mysql> select host,count(host) from ip_addr_int GROUP BY host HAVING COUNT(host) > 1;
++------------+-------------+
+| host       | count(host) |
++------------+-------------+
+| 3298943793 |           2 |
++------------+-------------+
+1 row in set (0.10 sec)
+
+mysql> SHOW PROFILE;
++--------------------------------+----------+
+| Status                         | Duration |
++--------------------------------+----------+
+| starting                       | 0.000094 |
+| Executing hook on transaction  | 0.000007 |
+| starting                       | 0.000010 |
+| checking permissions           | 0.000009 |
+| Opening tables                 | 0.000062 |
+| init                           | 0.000008 |
+| System lock                    | 0.000012 |
+| optimizing                     | 0.000011 |
+| statistics                     | 0.000016 |
+| preparing                      | 0.000014 |
+| Creating tmp table             | 0.000044 |
+| executing                      | 0.101680 |
+| end                            | 0.000025 |
+| query end                      | 0.000009 |
+| waiting for handler commit     | 0.003774 |
+| closing tables                 | 0.000025 |
+| freeing items                  | 0.000033 |
+| cleaning up                    | 0.000014 |
++--------------------------------+----------+
+18 rows in set, 1 warning (0.00 sec)
+
+```
 ## 4. JSON型 
 - Create table
 - Insert json data
