@@ -10,12 +10,12 @@ prior_knowledge: Docker, Docker-Compose の使い方、RDBMSへの興味　
 
 # IIJ BootCamp 2022 MySQLを触ってみよう
 
-## 0.はじめに
+## 0.カリキュラムの前に！！！
 ### MySQL Image pull
 - PROXYの設定を改めて確認してください
 - その上でdocker pullを実行してください
 ```
-# docker pull mysql:latest
+# docker pull mysql8:latest
 # docker image list
 REPOSITORY                    TAG                 IMAGE ID            CREATED             SIZE
 docker.io/mysql               latest              33037edcac9b        2 days ago          444 MB
@@ -29,12 +29,12 @@ docker.io/mysql               latest              33037edcac9b        2 days ago
 - 2022年 技術職の新卒採用者
 - IIJグループ会社所属の技術職(あるみんで申し込み可能な方)
 - BootCamp事前準備受講者
-- 環境OSは問わないが、LinuxVM環境を事前に構築が独力で可能
 - git, docker, docker-compose 等々の基本的コマンド操作が独力で行えること
 
 ### 講義概要
-- 雑談、フリーディスカッション 15min程度
-- ハンズズオン 残り全て
+- 雑談、フリーディスカッション 10-15min程度
+- ハンズズオン (残り全て) 
+- 質疑応答 (時間があれば)
 ### ハンズオン概要
 - 環境準備
 --　事前に準備したカリキュラムを使う  
@@ -44,22 +44,24 @@ docker.io/mysql               latest              33037edcac9b        2 days ago
 - QueryからみえるMySQLの動き
 - アプリケーション開発者あるいはDBA等、様々な角度から対応策を検討する
 
-## 1.雑談、フリーディスカッション 15min程度
-本日参加した皆さんの状況を教えてください
+## 1.雑談、フリーディスカッション 10-15min程度
+- 本日参加した皆さんの状況を教えてください
 
 ### 「RDBMS」についてお聞きします
-- 使った事ある (✋)
+- RDBMSという単語は初めて聞いた(だから参加してみた)(✋)
+- MySQL使った事ある (✋)
 - RDBMSが好きで仕方ない (✋)
 
 ### SQL/Queryについてお聞きします
 - 何となく知っている/聞いた事はある (✋)
-- 常にパフォーマンスを意識してSQLを書いている (✋)
+- ORM経由でいつも使っている (✋)
+- 常にパフォーマンスを意識して生でSQLを書いている (✋)
 
 ### RDBMSとその仲間についてお聞きします
 - PostgreSQL、MySQLはいずれもRDBMSである (✋)
 - MongoDBもRDBMSである (✋)
 
-### さて、RDBMSってそもそも何？
+### さて、RDBMSとは
 - Database とは
 
   データベース（英: database, DB）とは、検索や蓄積が容易にできるよう整理された情報の集まり 　via Wikipedia 
@@ -76,14 +78,15 @@ docker.io/mysql               latest              33037edcac9b        2 days ago
 
   - 給与表(給与id、給与額)
 
-  この表とデータ構造において、何が適切(あるいは不適切か)を様々な視点/要件で捉え、データを使う側の状況応じて柔軟に
+  この表とデータ構造において何が適切(あるいは不適切か)を様々な視点/要件で捉え、データを使う側の状況応じて柔軟に
 
   ”関係モデル”を構築するのに適切な「データ保管庫」が ______
   
 ## 2.MySQL 環境構築
-- MySQL公式Dockerイメージ最新版を使います
-### MySQL 起動、ログイン、ユーザ作成
-- MySQL起動まで CP#1
+- MySQL公式Dockerイメージ(最新版)を使います
+  - "Server version: 8.0.29 MySQL Community Server - GPL"
+### 2.1 MySQL 起動、ログイン、ユーザ作成  CP#1
+- MySQL起動まで
 ```
 # docker run --name mysql8 -e MYSQL_ROOT_PASSWORD=password -d -p 3306:3306 mysql
 ba2fd409099f51735be5fcbc1d3ee34406dd0f19793e017fee658c7b7e5ead39
@@ -91,8 +94,7 @@ ba2fd409099f51735be5fcbc1d3ee34406dd0f19793e017fee658c7b7e5ead39
 CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                               NAMES
 ba2fd409099f        mysql               "docker-entrypoint..."   3 seconds ago       Up 2 seconds        0.0.0.0:3306->3306/tcp, 33060/tcp   mysql8
 ```
-- MySQLへログイン, ユーザ作成　CP#2
-
+- MySQLへログイン, ユーザ作成
   - bootcampユーザを作成、パスワードもbootcamp 
   - bootcampユーザにFULL ACCESS権限を付与
 ```
@@ -122,7 +124,7 @@ mysql> exit
 Bye
 bash-4.4# exit
 ```
-### DATABASE作成 CP#3
+### 2.2 DATABASE作成 CP#2
 - nginx という名前のDatabaseを作成します
 - 以後はbootcampユーザでコンテナの外から実行
 ```
@@ -153,7 +155,7 @@ Enter password:
 +--------------+--------------------+----------------------------+------------------------+----------+--------------------+
 ```
 
-### カリキュラム用RepositoryをClone CP#4
+### 2.3 カリキュラム用RepositoryをClone CP#3
 - Proxy設定を確認の上、下記のURLへアクセス
 ```
 $ env |grep proxy
@@ -167,25 +169,32 @@ $ cd bootcamp_mysql
 ```
 $ git clone https://github.com/isfukuda/bootcamp_mysql.git
 ```
+
 ## 3. ハンズオン
-- RDBMSへの要件
-  1. 10万件のアクセスログを保存するDatabaseを作成しデータを格納したい
-  2. 該当のTableに対して、IPアドレスが重複しているものを抽出したい(IP, 件数)
-  　　- Queryは事前に作成済み、コピーして実行します
+- 10万件のアクセスログを調べ、"HOST"をキーにして重複が無いか調べてください
+  - RDBMSへの要件
+    1. 10万件のアクセスログを保存するDatabase(先程作成した "nginx" databaseを使う)へデータを格納
+    2. ログを格納するTableスキーマは任意、ただしHOST(IPアドレス)が重複しているものを抽出しなければ成らない  
+  - Q.Tableスキーマは任意、HOST列には『IPアドレス』の情報、どう型定義するのが良いか？
+    - データ型はvarcharか、intか、どの型が適切なんだろうか??
+```
+    // 参考: ハンズオンで使用するログの一部を抜粋 //
+    host        time    method  code    size
+    99.48.110.188       2022-07-07 11:53:48     PUT     302     43
+    242.138.126.142     2022-07-07 11:53:48     GET     200     820
+    103.52.39.65        2022-07-07 11:53:48     GET     200     2314
+```
 
-- 課題
-　「IPアドレス」を格納する列のデータ型はvarcharか、intどちらが良いか？
+- 以下の作業は次条件で実施する事とします
+  - MySQL8 Docker imageを利用し、デフォルトの設定でMySQLを使う
+  - サンプルデータ(アクセスログ 100,000件)を事前に用意してあり、cloneしたREPOに含まれてます
+  - 定義の異なる2つのTableを作成するSQL文も、REPOに含まれており、それぞれのTableにデータ投入してみましょう
+    - 一方のTableはHOST(IPアドレス)をvarchar型とする
+    - もう一方のTableはHOST(IPアドレス)をint型とする
 
-- ハンズオンに際して以下の条件で実行します
-  - MySQL8 Docker imageを利用する
-  - MySQLはデフォルト設定で実行する
-  - サンプルデータ(アクセスログ 100,000件)を事前に用意してあり、定義の異なる2つのTableへそれぞれデータ投入する
-    - 上記ログにはIPアドレスが含まれており、一方のTableはIPアドレスをvarchar型とする
-    - もう一方のTableはIPアドレスをint型とする
-
-### 3.1 varchar型のTableの準備とデータ投入
-- IPアドレスを varchar型と定義したTableを作成、サンプルデータをLoadする
-  - Q.3.1ではLoadコマンドを使いますが、標準的なSQLでTableにデータを追加するにはなんという命令文を使いますか？
+### 3.1 varchar型のTableの準備とデータ投入  CP#4
+- IPアドレスを varchar型と定義したTableを作成し、サンプルデータをLoadする
+  - Q. ここではLoadコマンドを使いますが、標準的なSQLでTableにデータを追加するにはなんという命令文を使いますか？
 ```
 // file copy to Container
 # ls 
@@ -216,7 +225,6 @@ Enter password:
 | ip_addr_char    |
 +-----------------+
 
-
 #  docker exec -it mysql8 mysql -u bootcamp -p nginx -e"desc ip_addr_char;"
 Enter password: 
 +--------+-------------+------+-----+---------+-------+
@@ -229,7 +237,8 @@ Enter password:
 | size   | int         | YES  |     | NULL    |       |
 +--------+-------------+------+-----+---------+-------+
 ```
-- Smaple_100k , load to varchar
+### 3.2 データ投入  CP#5
+- Smaple_100k , load to "ip_addr_char"
 ```
 # docker exec -it mysql8 mysql -u bootcamp -p --local_infile=1 nginx -e"$(cat load_data_iplist.sql);"
 Enter password: 
@@ -242,7 +251,7 @@ Enter password:
 |   100000 |
 +----------+
 ```
-### 3.2 int型
+### 3.3 int型のTableの準備 CP#6
 - IPアドレスをint型で定義したTableを別に作成する
 - varchar型の時はLoadコマンドを使いましたが、今回はINSERT文を実行します
 ```
@@ -271,6 +280,7 @@ Enter password:
 +--------+-------------+------+-----+---------+-------+
 
 ```
+### 3.4 データ投入  CP#7
 - Insert data to int table from char table
 ```
 # docker exec -it mysql8 mysql -u bootcamp -p --local_infile=1 nginx -e"$(cat insert_iplist_int.sql);"
@@ -284,7 +294,7 @@ Enter password:
 |   100000 |
 +----------+
 ```
-### 3.3 重複した行を抽出するQueryを実行する
+### 3.5 重複した行を抽出するQueryを実行する CP#8
 - それぞれのTableへQueryを投げ、その違い/結果を見ます
   - 特にQuery実行結果に出力されるクエリレスポンスに注目する事
 - 今回のサンプルデータには意図して重複データを忍ばせてあります
@@ -338,7 +348,7 @@ mysql> select host,count(host) from ip_addr_int GROUP BY host HAVING COUNT(host)
 1 row in set (0.18 sec)
 ```
 
-### 3.4 Query実行結果について調査
+### 3.6 Query実行結果について調査 CP#9
 - profileingを行い、その内容から推定原因を探る
 ```
 // おまじない
@@ -412,7 +422,8 @@ mysql> SHOW PROFILE;
 +--------------------------------+----------+
 18 rows in set, 1 warning (0.00 sec)
 ```
-### 3.5 Profileing結果を整理
+
+### 3.7 Profileing結果を整理 
 - 図解
 
 ## 4. ハンズオン3の結果から対応策/対応方針を考えましょう
