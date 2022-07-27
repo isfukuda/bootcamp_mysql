@@ -172,7 +172,7 @@ $ env |grep proxy
 http_proxy=http://<PROXY HOST>:PROXY_PORT/
 https_proxy=http://<PROXY HOST>:PROXY_PORT/
 
-$ git clone https://gh.iiji.jp/s-fukuda/bootcamp_mysql.git
+$ git clone https://<社内REPO>/<主催者アカウント>/bootcamp_mysql.git
 $ cd bootcamp_mysql
 ```
 - Group 会社の方は、下記のURLへアクセス
