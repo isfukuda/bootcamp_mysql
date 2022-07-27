@@ -128,8 +128,17 @@ bash-4.4# exit
 - nginx という名前のDatabaseを作成します
 - 以後はbootcampユーザでコンテナの外から実行
 ```
+// Docker機動直後に以下のコマンドを打ちましょう
+# docker exec -it mysql8 mysql -u bootcamp -p -e"show databases;"
+Enter password: 
+...
+...
+
+// Database "nginx"を作成します
 # docker exec -it mysql8 mysql -u bootcamp -p -e"create database nginx;"
 Enter password: 
+
+// 先ほどと同じコマンド実行、出力の違いを見ま翔
 # docker exec -it mysql8 mysql -u bootcamp -p -e"show databases;"
 Enter password: 
 +--------------------+
@@ -142,6 +151,7 @@ Enter password:
 | sys                |
 +--------------------+
 
+// MySQL内部の情報を確認するコマンドにも触れましょう
 # docker exec -it mysql8 mysql -u bootcamp -p -e"select * from INFORMATION_SCHEMA.SCHEMATA;"
 Enter password: 
 +--------------+--------------------+----------------------------+------------------------+----------+--------------------+
