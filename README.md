@@ -169,8 +169,8 @@ Enter password:
 - Proxy設定を確認の上、下記のURLへアクセス
 ```
 $ env |grep proxy
-http_proxy=http://proxy.iiji.jp:8080/
-https_proxy=http://proxy.iiji.jp:8080/
+http_proxy=http://<PROXY HOST>:PROXY_PORT/
+https_proxy=http://<PROXY HOST>:PROXY_PORT/
 
 $ git clone https://gh.iiji.jp/s-fukuda/bootcamp_mysql.git
 $ cd bootcamp_mysql
