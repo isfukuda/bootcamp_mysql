@@ -61,10 +61,11 @@ docker.io/mysql               latest              33037edcac9b        2 days ago
 - PostgreSQL、MySQLはいずれもRDBMSである (✋)
 - MongoDBもRDBMSである (✋)
 
-### さて、RDBMSとは
+### DatabaseとRDBMS
 - Database とは
 
-  データベース（英: database, DB）とは、検索や蓄積が容易にできるよう整理された情報の集まり 　via Wikipedia 
+  データベース（英: database, DB）とは、検索や蓄積が容易にできるよう整理された情報の集まり
+  via Wikipedia 
 
 - Relational とは
 
@@ -81,6 +82,15 @@ docker.io/mysql               latest              33037edcac9b        2 days ago
   この表とデータ構造において何が適切(あるいは不適切か)を様々な視点/要件で捉え、データを使う側の状況応じて柔軟に
 
   ”関係モデル”を構築するのに適切な「データ保管庫」が ______
+  
+- 表/Table 
+  - カラム(列)とレコード(行)でデータを格納する
+  - テーブルの定義にはデータに対して属性紐つける
+    - 数値型
+    - 文字列型
+    - 日付型・時刻型
+    - etc
+  - Q. 先ほどの社員表の「社員番号に適切な型は何がふさわしいでしょうか？」 
   
 ## 2.MySQL 環境構築
 - MySQL公式Dockerイメージ(最新版)を使います
