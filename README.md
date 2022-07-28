@@ -48,7 +48,7 @@ docker.io/mysql               latest              33037edcac9b        2 days ago
 - 本日参加した皆さんの状況を教えてください
 
 ### 「RDBMS」についてお聞きします
-- RDBMSという単語は初めて聞いた(だから参加してみた)(✋)
+- DB OverView参加した(✋)
 - MySQL使った事ある (✋)
 - RDBMSが好きで仕方ない (✋)
 
@@ -56,10 +56,6 @@ docker.io/mysql               latest              33037edcac9b        2 days ago
 - 何となく知っている/聞いた事はある (✋)
 - ORM経由でいつも使っている (✋)
 - 常にパフォーマンスを意識して生でSQLを書いている (✋)
-
-### RDBMSとその仲間についてお聞きします
-- PostgreSQL、MySQLはいずれもRDBMSである (✋)
-- MongoDBもRDBMSである (✋)
 
 ### DatabaseとRDBMS
 - Database とは
@@ -83,7 +79,7 @@ docker.io/mysql               latest              33037edcac9b        2 days ago
 
   ”関係モデル”を構築するのに適切な「データ保管庫」が ______
   
-- 表/Table 
+- 表/Table
   - カラム(列)とレコード(行)でデータを格納する
   - テーブルの定義にはデータに対して属性紐つける
     - 数値型
@@ -95,6 +91,10 @@ docker.io/mysql               latest              33037edcac9b        2 days ago
 ## 2.MySQL 環境構築
 - MySQL公式Dockerイメージ(最新版)を使います
   - "Server version: 8.0.29 MySQL Community Server - GPL"
+- 諸注意
+  - ユーザ名、パスワードの設定は今回のハンズオンに限ったケースと理解してください
+  - ユーザへの権限は適宜施される、設計実装されるべきものです
+  - サンプルデータはハンズオン以外ではくれぐれも利用しないでください
 ### 2.1 MySQL 起動、ログイン、ユーザ作成  CP#1
 - MySQL起動まで
 ```
@@ -190,13 +190,13 @@ $ cd bootcamp_mysql
 $ git clone https://github.com/isfukuda/bootcamp_mysql.git
 ```
 
-## 3. ハンズオン
-- 10万件のアクセスログを調べ、"HOST"をキーにして重複が無いか調べてください
-  - RDBMSへの要件
-    1. 10万件のアクセスログを保存するDatabase(先程作成した "nginx" databaseを使う)へデータを格納
-    2. ログを格納するTableスキーマは任意、ただしHOST(IPアドレス)が重複しているものを抽出しなければ成らない  
-  - Q.Tableスキーマは任意、HOST列には『IPアドレス』の情報、どう型定義するのが良いか？
-    - データ型はvarcharか、intか、どの型が適切なんだろうか??
+## 3. ハンズオン、準備と内容確認  CP#4
+- 10万件のアクセスログを調べ、"HOST"をキーにして重複が無いか調べることにします
+  - 前提: DBへの要件
+    1. 10万件のアクセスログを保存するDatabase(先程作成した "nginx" databaseを使う)とTableを2種類作成
+    2. ログを格納するTableスキーマは2種類あり、それぞれに対してQueryを投げて、HOST(IPアドレス)が重複しているものを抽出
+  - 課題: Table定義の中で、HOST列『IPアドレス』の情報を格納する型はどうするのが良いか、判断がつかない
+    - データ型はvarcharか、intか、どの型が適切か??
 ```
     // 参考: ハンズオンで使用するログの一部を抜粋 //
     host        time    method  code    size
@@ -205,14 +205,14 @@ $ git clone https://github.com/isfukuda/bootcamp_mysql.git
     103.52.39.65        2022-07-07 11:53:48     GET     200     2314
 ```
 
-- 以下の作業は次条件で実施する事とします
-  - MySQL8 Docker imageを利用し、デフォルトの設定でMySQLを使う
-  - サンプルデータ(アクセスログ 100,000件)を事前に用意してあり、cloneしたREPOに含まれてます
-  - 定義の異なる2つのTableを作成するSQL文も、REPOに含まれており、それぞれのTableにデータ投入してみましょう
+- 課題は次条件で実施する事とします
+  - MySQL8 Docker imageのデフォルトの設定を使う
+  - サンプルデータ(アクセスログ 100,000件)を事前に用意済み
+  - 定義の異なる2つのTableを作成、それぞれのTableにデータ投入してみましょう
     - 一方のTableはHOST(IPアドレス)をvarchar型とする
     - もう一方のTableはHOST(IPアドレス)をint型とする
 
-### 3.1 varchar型のTableの準備とデータ投入  CP#4
+### 3.1 varchar型のTableの準備とデータ投入  CP#5
 - IPアドレスを varchar型と定義したTableを作成し、サンプルデータをLoadする
   - Q. ここではLoadコマンドを使いますが、標準的なSQLでTableにデータを追加するにはなんという命令文を使いますか？
 ```
@@ -257,7 +257,7 @@ Enter password:
 | size   | int         | YES  |     | NULL    |       |
 +--------+-------------+------+-----+---------+-------+
 ```
-### 3.2 データ投入  CP#5
+### 3.2 データ投入  CP#6
 - Smaple_100k , load to "ip_addr_char"
 ```
 # docker exec -it mysql8 mysql -u bootcamp -p --local_infile=1 nginx -e"$(cat load_data_iplist.sql);"
@@ -271,7 +271,7 @@ Enter password:
 |   100000 |
 +----------+
 ```
-### 3.3 int型のTableの準備 CP#6
+### 3.3 int型のTableの準備 CP#7
 - IPアドレスをint型で定義したTableを別に作成する
 - varchar型の時はLoadコマンドを使いましたが、今回はINSERT文を実行します
 ```
@@ -300,7 +300,7 @@ Enter password:
 +--------+-------------+------+-----+---------+-------+
 
 ```
-### 3.4 データ投入  CP#7
+### 3.4 データ投入  CP#8
 - Insert data to int table from char table
 ```
 # docker exec -it mysql8 mysql -u bootcamp -p --local_infile=1 nginx -e"$(cat insert_iplist_int.sql);"
@@ -314,7 +314,7 @@ Enter password:
 |   100000 |
 +----------+
 ```
-### 3.5 重複した行を抽出するQueryを実行する CP#8
+### 3.5 重複した行を抽出するQueryを実行する CP#9
 - それぞれのTableへQueryを投げ、その違い/結果を見ます
   - 特にQuery実行結果に出力されるクエリレスポンスに注目する事
 - 今回のサンプルデータには意図して重複データを忍ばせてあります
@@ -368,7 +368,7 @@ mysql> select host,count(host) from ip_addr_int GROUP BY host HAVING COUNT(host)
 1 row in set (0.18 sec)
 ```
 
-### 3.6 Query実行結果について調査 CP#9
+### 3.6 Query実行結果について調査 CP#10
 - profileingを行い、その内容から推定原因を探る
 ```
 // おまじない
@@ -443,11 +443,12 @@ mysql> SHOW PROFILE;
 18 rows in set, 1 warning (0.00 sec)
 ```
 
-### 3.7 Profileing結果を整理 
+### 3.7  Profiling結果を整理 
 - 図解
 
 ## 4. ハンズオン3の結果から対応策/対応方針を考えましょう
 - 参加された方々のそれぞれの立場で最適なアクションはどれでしょうか？
+
 ### 4.1 アプリケーション開発者として
 1. Query実装要件からIPアドレスはint型で良いと判断できるので、採用する
 2. 想定したデータ量及び、SELECT文に見合ったリソースでは無い事を調査、再見積もりを行いDBAと対応策を検討、実装する
@@ -458,7 +459,7 @@ mysql> SHOW PROFILE;
 ### 4.2 DBA（DATABASE管理者）として
 1. 闇雲にSELECT文を発行してリソースを食い潰すアプリケーション開発者側へ改修依頼だけを行う　
 2. heap to diskの原因をアプリケーション開発チームと共有し、SQL改修の検討を含め共同で改修に着手する
-3. Heap領域の最適解を実行結果から再見積もり、検証、実証してから新MySQLインスタンスをアプリケーションチームへ提供する
+3. Heap領域の最適値を実行結果から再見積もり、検証、実証してから新MySQLインスタンスをアプリケーションチームへ提供する
 4. MySQLの利用を止めて、その他のRDBMSエンジンを採用する様にProjectマネージャーに進言する
 5. MySQLをForkして、ipアドレスを適切に利用可能にするip型をスクラッチで実装する
 6. その他
@@ -466,11 +467,13 @@ mysql> SHOW PROFILE;
 ## 5. 本日のまとめ
 MySQLに触れてみて
 - MySQLサーバ環境準備
-  docker/docker-composeを使いMySQLサーバ構築を簡略化させてもらいました。MySQL on dockerについては考慮すべきことが多々あります
+  dockerを使いMySQLサーバ構築を簡略化させてもらいました。MySQL on dockerについては考慮すべきことが多々あります
   この点は頭の片隅に必ず置いて覚えておいて下さい
+  
 - 基本的なDatabase操作を経験
   データベースへのアクセスにはmysqlクライアントを使い、基本的な知識抜きに「実践形式」でデータベースオブジェクトを作成、Queryを実行しました
   なお、アプリケーション技術者を目指す方は別途、開発言語/Database Driver経由でデータベースの操作を行う事をお勧めします
+  
 - 本日触れなかった事
   - データベース要件に合わせた論理設計、物理設計、運用設計等、全般
   - MySQLサーバ初期構築から、rootログインとその後のDatabaseユーザ管理はしっかりと設計と実装が別途必須になります
