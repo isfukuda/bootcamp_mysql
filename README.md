@@ -109,7 +109,7 @@ docker.io/mysql               latest              33037edcac9b        2 days ago
     10    30    minamino  ENGINEER 2001 1998-01-01 XXXXXXXXXXX
     
     e.g.
-      SELECT id,ename
+      SELECT ,ename
       FROM emp
       WHERE hiredate BETWEEN '2000-01-01' AND '2010-12-31';
     ```
