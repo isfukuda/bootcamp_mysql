@@ -79,6 +79,14 @@ docker.io/mysql               latest              33037edcac9b        2 days ago
 
   ”関係モデル”を構築するのに適切な「データ保管庫」が ______
   
+### 今日のメイントピック
+- DB Overviewからの繋がり
+  - Databaseの中でも、特に"RDBMS"がBEST Solutionになりえた機構の概要に触れた
+    - 信頼性
+    - 安全性
+    - 性能　...ここをMySQL的に掘り下げる
+  - これ以外にもいくつかあるが、発散してしまうので割愛する
+  
 - 表/Table
   - カラム(列)とレコード(行)でデータを格納する
   - テーブルの定義にはデータに対して属性紐つける
@@ -86,8 +94,26 @@ docker.io/mysql               latest              33037edcac9b        2 days ago
     - 文字列型
     - 日付型・時刻型
     - etc
-  - Q. 先ほどの社員表の「社員番号に適切な型は何がふさわしいでしょうか？」 
-  
+  - Q. emp表からBETWEEN演算子と呼ばれるものを使って日付(hiredate)を使ったデータを絞り込むQueryに適切な型はどれでしょうか？
+    ```
+    // emp
+    EMPNO DEPNO ENAME     JOB      MGR  HIREDATE   SAL
+    1     10    moriyasu  CEO      null 1992-12-03 XXXXXXXXXXX
+    2     20    sorimachi HR-MGR   1001 1993-01-21 XXXXXXXXXXX        
+    3     40    ado       ENGINEER 2001 1995-10-30 XXXXXXXXXXX
+    4     51    ogawa     SALES    2010 1997-04-01 XXXXXXXXXXX
+    5     50    muroya    SALES    2020 1999-06-01 ZZZZZZZZZZZ
+    6     51    endo      GENERAL  1002 1999-06-01 ZZZZZZZZZZZ
+    7     20    morita    GENERAL  1002 1999-04-01 ZZZZZZZZZZZ
+    8     32    furuhashi ENGINEER 2050 2000-04-01 XXXXXXXXXXX
+    9     40    asano     ENGINEER 2001 1998-01-01 XXXXXXXXXXX
+    10    30    minamino  ENGINEER 2001 1998-01-01 XXXXXXXXXXX
+    
+    e.g.
+      SELECT id,ename
+      FROM emp
+      WHERE hiredate BETWEEN '2000-01-01' AND '2010-12-31';
+    ```
 ## 2.MySQL 環境構築
 - MySQL公式Dockerイメージ(最新版)を使います
   - "Server version: 8.0.29 MySQL Community Server - GPL"
