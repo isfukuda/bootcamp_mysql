@@ -15,7 +15,7 @@ prior_knowledge: Docker, Docker-Compose の使い方、RDBMSへの興味　
 - PROXYの設定を改めて確認してください
 - その上でdocker pullを実行してください
 ```
-# docker pull mysql8:latest
+# docker pull mysql:latest
 # docker image list
 REPOSITORY                    TAG                 IMAGE ID            CREATED             SIZE
 docker.io/mysql               latest              33037edcac9b        2 days ago          444 MB
