@@ -74,13 +74,13 @@ docker.io/mysql               latest              33037edcac9b        2 days ago
 
   - 給与表(給与id、給与額)
 
-  この表とデータ構造において何が適切(あるいは不適切か)を様々な視点/要件で捉え、データを使う側の状況応じて柔軟に
+  この表とデータ構造において何が適切か(あるいは不適切か)を様々な視点/要件で捉え、データを使う側の状況に応じて柔軟に
 
   ”関係モデル”を構築するのに適切な「データ保管庫」が ______
   
 ### 今日のメイントピック
 - DB Overviewからの繋がり
-  - Databaseの中でも、特に"RDBMS"がBEST Solutionになりえた機構の概要に触れた
+  - Databaseの中でも、特に"RDBMS"がBEST Solutionになりえた機構の概要に触れる
     - 信頼性
     - 安全性
     - 性能　...ここをMySQL的に掘り下げる
@@ -394,7 +394,7 @@ mysql> select host,count(host) from ip_addr_int GROUP BY host HAVING COUNT(host)
 ```
 
 ### 3.6 Query実行結果について調査 CP#10
-- profileingを行い、その内容から推定原因を探る
+- profilingを行い、その内容から推定原因を探る
 ```
 // おまじない
 mysql> SET profiling=1;
